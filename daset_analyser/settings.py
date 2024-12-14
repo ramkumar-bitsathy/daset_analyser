@@ -133,4 +133,4 @@ import django_heroku
 
 django_heroku.settings(locals())
 
-ALLOWED_HOSTS = ['daset-analyser.onrender.com']
+ALLOWED_HOSTS = ['daset-analyser.onrender.com', 'localhost', '127.0.0.1']
