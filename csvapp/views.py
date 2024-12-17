@@ -2,10 +2,10 @@ from django.shortcuts import render
 import pandas as pd
 
 def home(request):
-    return render(request, 'csvapp\home.html')
+    return render(request, 'home.html')
 
 def visualization(request):
-    return render(request, r'csvapp\visualization.html')
+    return render(request, 'visualization.html')
 
 def process_dataset(request):
     if request.method == 'POST':
@@ -29,6 +29,6 @@ def process_dataset(request):
         if 'column_summary' in selected_details:
             processed_data['Column Summary'] = dataset.head().to_string()
 
-        return render(request, 'csvapp\home.html', {'processed_data': processed_data})
+        return render(request, 'home.html', {'processed_data': processed_data})
 
-    return render(request, 'csvapp\home.html')
+    return render(request, 'home.html')
