@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataset Visualization</title>
+</head>
+<body>
+    <h1>Dataset Visualization</h1>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" action="{% url 'visualization' %}">
+        {% csrf_token %}
+        
+        <!-- Visualization Type Selection (Univariate, Bivariate, Multivariate) -->
+        <label for="features_type">Select Features to Visualize:</label>
+        <select name="features_type" id="features_type" onchange="updateFeatureOptions()" required>
+            <option value="univariate">Univariate (1 feature)</option>
+            <option value="bivariate">Bivariate (2 features)</option>
+            <option value="multivariate">Multivariate (3+ features)</option>
+        </select>
+
+        <div id="univariate_options" class="feature-options">
+            <!-- Chart Type Selection -->
+            <label for="chart_type">Select Chart Type:</label>
+            <select name="chart_type" id="chart_type" required>
+                <option value="bar">Bar Chart</option>
+            </select>
+            <label for="x_column">Select Feature for Univariate Plot:</label>
+            <select name="x_column" id="x_column" required>
+                {% for column in columns %}
+                    <option value="{{ column }}">{{ column }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="bivariate_options" class="feature-options" style="display:none;">
+            <!-- Chart Type Selection -->
+            <label for="chart_type">Select Chart Type:</label>
+            <select name="chart_type" id="chart_type" required>
+                <option value="scatter">Scatter Plot</option>
+                <option value="line">Line Chart</option>
+            </select>
+            <label for="x_column">Select X-Axis:</label>
+            <select name="x_column" id="x_column" required>
+                {% for column in columns %}
+                    <option value="{{ column }}">{{ column }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="y_column">Select Y-Axis:</label>
+            <select name="y_column" id="y_column" required>
+                {% for column in columns %}
+                    <option value="{{ column }}">{{ column }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="multivariate_options" class="feature-options" style="display:none;">
+            <!-- Chart Type Selection -->
+            <label for="chart_type">Select Chart Type:</label>
+            <select name="chart_type" id="chart_type" required>
+                <option value="histogram">Histogram</option>
+                <option value="boxplot">Box Plot</option>
+            </select>
+            <label for="x_column">Select Features for Multivariate Plot:</label>
+            <select name="x_column" id="x_column" required>
+                {% for column in columns %}
+                    <option value="{{ column }}">{{ column }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="y_column">Select Another Feature:</label>
+            <select name="y_column" id="y_column" required>
+                {% for column in columns %}
+                    <option value="{{ column }}">{{ column }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="z_column">Select Another Feature:</label>
+            <select name="z_column" id="z_column" required>
+                {% for column in columns %}
+                    <option value="{{ column }}">{{ column }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        
+
+        <button type="submit">Generate Plot</button>
+    </form>
+
+    {% if chart %}
+        <div>
+            <h2>Generated Visualization</h2>
+            <img src="data:image/png;base64,{{ chart }}" alt="Visualization">
+        </div>
+    {% endif %}
+
+    <script>
+        function updateFeatureOptions() {
+            var featureType = document.getElementById('features_type').value;
+            document.getElementById('univariate_options').style.display = (featureType === 'univariate') ? 'block' : 'none';
+            document.getElementById('bivariate_options').style.display = (featureType === 'bivariate') ? 'block' : 'none';
+            document.getElementById('multivariate_options').style.display = (featureType === 'multivariate') ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>
