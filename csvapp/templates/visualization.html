@@ -1,9 +1,12 @@
 <!DOCTYPE html>
+{% load static %}
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dataset Visualization</title>
+    <link rel="stylesheet" href="{% static 'visualisation.css' %}">
 </head>
 <body>
     <h1>Dataset Visualization</h1>
@@ -25,12 +28,17 @@
 
         <div id="univariate_options" class="feature-options">
             <!-- Chart Type Selection -->
-            <label for="chart_type">Select Chart Type:</label>
-            <select name="chart_type" id="chart_type" required>
-                <option value="bar">Bar Chart</option>
+            <label for="univariate_chart_type">Select Chart Type:</label>
+            <select name="univariate_chart_type" id="univariate_chart_type" required>
+                <option value="bar">Bar Plot</option>
+                <option value="scatter">Scatter Plot</option>
+                <option value="line">Line Plot</option>
+                <option value="histogram">Histogram</option>
+                <option value="boxplot">Box Plot</option>
             </select>
-            <label for="x_column">Select Feature for Univariate Plot:</label>
-            <select name="x_column" id="x_column" required>
+
+            <label for="univariate_x_column">Select Feature for Univariate Plot:</label>
+            <select name="univariate_x_column" id="univariate_x_column" required>
                 {% for column in columns %}
                     <option value="{{ column }}">{{ column }}</option>
                 {% endfor %}
@@ -39,20 +47,23 @@
 
         <div id="bivariate_options" class="feature-options" style="display:none;">
             <!-- Chart Type Selection -->
-            <label for="chart_type">Select Chart Type:</label>
-            <select name="chart_type" id="chart_type" required>
+            <label for="bivariate_chart_type">Select Chart Type:</label>
+            <select name="bivariate_chart_type" id="bivariate_chart_type" required>
                 <option value="scatter">Scatter Plot</option>
                 <option value="line">Line Chart</option>
+                <option value="bar">Bar Chart</option>
+                <option value="boxplot">Box Plot</option>
             </select>
-            <label for="x_column">Select X-Axis:</label>
-            <select name="x_column" id="x_column" required>
+
+            <label for="bivariate_x_column">Select X-Axis:</label>
+            <select name="bivariate_x_column" id="bivariate_x_column" required>
                 {% for column in columns %}
                     <option value="{{ column }}">{{ column }}</option>
                 {% endfor %}
             </select>
 
-            <label for="y_column">Select Y-Axis:</label>
-            <select name="y_column" id="y_column" required>
+            <label for="bivariate_y_column">Select Y-Axis:</label>
+            <select name="bivariate_y_column" id="bivariate_y_column" required>
                 {% for column in columns %}
                     <option value="{{ column }}">{{ column }}</option>
                 {% endfor %}
@@ -61,27 +72,29 @@
 
         <div id="multivariate_options" class="feature-options" style="display:none;">
             <!-- Chart Type Selection -->
-            <label for="chart_type">Select Chart Type:</label>
-            <select name="chart_type" id="chart_type" required>
-                <option value="histogram">Histogram</option>
-                <option value="boxplot">Box Plot</option>
+            <label for="multivariate_chart_type">Select Chart Type:</label>
+            <select name="multivariate_chart_type" id="multivariate_chart_type" required>
+                <option value="pairplot">Pair Plot</option>
+                <option value="Heatmap">Heat Map</option>
+                <option value="scatter">Scatter Plot</option>
             </select>
-            <label for="x_column">Select Features for Multivariate Plot:</label>
-            <select name="x_column" id="x_column" required>
+
+            <label for="multivariate_x_column">Select Features for Multivariate Plot:</label>
+            <select name="multivariate_x_column" id="multivariate_x_column" required>
                 {% for column in columns %}
                     <option value="{{ column }}">{{ column }}</option>
                 {% endfor %}
             </select>
 
-            <label for="y_column">Select Another Feature:</label>
-            <select name="y_column" id="y_column" required>
+            <label for="multivariate_y_column">Select Another Feature:</label>
+            <select name="multivariate_y_column" id="multivariate_y_column" required>
                 {% for column in columns %}
                     <option value="{{ column }}">{{ column }}</option>
                 {% endfor %}
             </select>
 
-            <label for="z_column">Select Another Feature:</label>
-            <select name="z_column" id="z_column" required>
+            <label for="multivariate_z_column">Select Another Feature:</label>
+            <select name="multivariate_z_column" id="multivariate_z_column" required>
                 {% for column in columns %}
                     <option value="{{ column }}">{{ column }}</option>
                 {% endfor %}

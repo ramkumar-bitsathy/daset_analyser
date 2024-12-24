@@ -1,8 +1,10 @@
 from django.shortcuts import render
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+from io import StringIO
 import io
 import base64
 
@@ -12,15 +14,17 @@ def generate_visualization(request):
 
     # Retrieve dataset from session
     dataset_json = request.session['dataset']
-    dataset = pd.read_json(dataset_json)
+    dataset = pd.read_json(StringIO(dataset_json))
 
     if request.method == 'POST':
-        chart_type = request.POST.get('chart_type')
+        
         features_type = request.POST.get('features_type')
-
+        print(features_type)
         # Univariate: Only one column for X
         if features_type == 'univariate':
-            x_column = request.POST.get('x_column')
+            chart_type = request.POST.get('univariate_chart_type')
+            x_column = request.POST.get('univariate_x_column')
+            
             y_column = None  # No Y column for univariate
 
             # Create plot
@@ -37,6 +41,7 @@ def generate_visualization(request):
                 elif chart_type == 'boxplot':
                     sns.boxplot(data=dataset, x=x_column)
                 else:
+                    
                     raise ValueError("Unsupported chart type.")
 
                 # Save plot to a string buffer
@@ -56,8 +61,9 @@ def generate_visualization(request):
 
         # Bivariate: Two columns for X and Y
         elif features_type == 'bivariate':
-            x_column = request.POST.get('x_column')
-            y_column = request.POST.get('y_column')
+            chart_type = request.POST.get('bivariate_chart_type')
+            x_column = request.POST.get('bivariate_x_column')
+            y_column = request.POST.get('bivariate_y_column')
 
             # Create plot
             plt.figure(figsize=(10, 6))
@@ -90,15 +96,20 @@ def generate_visualization(request):
 
         # Multivariate: More than two columns
         elif features_type == 'multivariate':
-            x_column = request.POST.get('x_column')
-            y_column = request.POST.get('y_column')
-            z_column = request.POST.get('z_column')
+            chart_type = request.POST.get('multivariate_chart_type')
+            x_column = request.POST.get('multivariate_x_column')
+            y_column = request.POST.get('multivariate_y_column')
+            z_column = request.POST.get('multivariate_z_column')
 
             # Create plot
             plt.figure(figsize=(10, 6))
             try:
                 if chart_type == 'scatter':
                     sns.scatterplot(data=dataset, x=x_column, y=y_column, hue=z_column)
+                elif chart_type == "pairplot":
+                    dataset1 = request.session.get('dataset')
+                    subset = dataset1[[x_column,y_column,z_column]]
+                    sns.pairplot(subset)
                 elif chart_type == 'line':
                     sns.lineplot(data=dataset, x=x_column, y=y_column)
                 elif chart_type == 'bar':
