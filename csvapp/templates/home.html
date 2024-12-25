@@ -31,6 +31,7 @@
 
         /* Section styling */
         section {
+            max-width:  100%;
             margin: 20px 0;
             padding: 20px;
             border: 1px solid #ccc;
@@ -42,16 +43,6 @@
             max-width: 100%;
             background-color: #f1f1f1;
         }
-
-        .view-info-section {
-            max-width: 100%;
-            background-color: #fdfdfd;
-        }
-
-        .results-section {
-            background-color: #e9ecef;
-        }
-
         /* Styling for forms and buttons */
         form {
             margin: 0;
@@ -78,29 +69,55 @@
             background-color: #0056b3;
         }
 
-        /* Styling for the results */
-        .result-item {
-            margin-bottom: 15px;
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        pre {
-            
-            background: #e9ecef;
-            padding: 10px;
-            border-radius: 5px;
+        table th, table td {
             border: 1px solid #ccc;
-            max-width: 100%;
-            overflow-x: scroll; /* To allow scrolling if content is too wide */
+            padding: 8px;
+            text-align: left;
         }
 
-        /* Ensure everything stays within fixed width */
-        .results-section {
+        table th {
+            background-color: #f1f1f1;
+        }
+
+        /* Pagination controls */
+        .pagination {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .pagination button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .dataset-view-section{
             max-width: 100%;
-            overflow-x: auto;
+            overflow-x: scroll;
+        }
+        .dataset-info{
+            max-width: 100%;
+            overflow-x: scroll;
         }
     </style>
 </head>
 <body>
+
     <header>
         <h1>Data Analysis Application</h1>
         <nav>
@@ -108,75 +125,109 @@
             <a href="{% url 'visualization' %}">Visualization</a>
         </nav>
     </header>
-    <main>
+
+    <div class="container">
+        <!-- Upload Section -->
         <section class="upload-section">
             <h2>Upload Your Dataset</h2>
             <form method="POST" enctype="multipart/form-data" action="{% url 'process_dataset' %}">
                 {% csrf_token %}
                 <!-- File upload -->
                 <label for="dataset">Upload Dataset (CSV/XLSX):</label>
-                <input type="file" id="dataset" name="dataset" accept=".csv" required><br><br>
-
-                <!-- Select options -->
-                <label for="details">Select Details to Describe:</label>
-                <select id="details" name="details" multiple required>
-                    <option value="null_values">Null Values</option>
-                    <option value="data_types">Data Types</option>
-                    <option value="statistical_info">Statistical Info</option>
-                    <option value="unique_values">Unique Values</option>
-                    <option value="column_summary">Column Summary</option>
-                </select><br><br>
-
+                <input type="file" id="dataset" name="dataset" accept=".csv, .xlsx" required><br><br>
+                
                 <!-- Submit button -->
-                <button type="submit">Submit</button>
+                <button type="submit">Upload Dataset</button>
             </form>
         </section>
 
-        <!-- View Info Section -->
-        <section class="view-info-section">
-            <h2>View Dataset Information</h2>
-            <form method="POST" action="{% url 'process_dataset' %}">
-                {% csrf_token %}
-                <!-- Select options -->
-                <label for="details">Select Details to Describe:</label>
-                <select id="details" name="details" multiple required>
-                    <option value="null_values">Null Values</option>
-                    <option value="data_types">Data Types</option>
-                    <option value="statistical_info">Statistical Info</option>
-                    <option value="unique_values">Unique Values</option>
-                </select><br><br>
-        
-                <!-- Submit button -->
-                <button type="submit">View Info</button>
-            </form>
-        </section>
-
-        {% if processed_data %}
-        <!-- Results Section -->
-        <section class="results-section">
+        <section class="dataset-info">
             <h2>Dataset Details</h2>
-            <!-- Display results dynamically -->
-            {% for detail, result in processed_data.items %}
-                {% if detail == "Statistical Info" or detail == "Column Summary" %}
-                <div class="result-item">
-                    <h3>{{ detail }}</h3>
-                    <pre>{{ result }}</pre>
-                </div>
-                {% endif %}
-                {% if detail != "Statistical Info" %}
-                    <h2>{{ detail }}</h2>
-                    {% for col, val in result.items %}
-                    <div class="result-item">
-                        <p>{{ col }}: {{ val }}</p>
-                    </div>
+            {% if processed_data %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Data Type</th>
+                            <th>Null Values</th>
+                            <th>Mean</th>
+                            <th>Median</th>
+                            <th>Mode</th>
+                            <th>25%</th>
+                            <th>50%</th>
+                            <th>75%</th>
+                            <th>Unique Values</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in processed_data %}
+                            <tr>
+                                <td>{{ row.Column }}</td>
+                                <td>{{ row.Data_Type }}</td>
+                                <td>{{ row.Null_Values }}</td>
+                                <td>{{ row.Mean|default_if_none:"N/A" }}</td>
+                                <td>{{ row.Median|default_if_none:"N/A" }}</td>
+                                <td>{{ row.Mode }}</td>
+                                <td>{{ row.percentile_25|default_if_none:"N/A" }}</td>
+                                <td>{{ row.percentile_50|default_if_none:"N/A" }}</td>
+                                <td>{{ row.percentile_50|default_if_none:"N/A" }}</td>
+                                <td>{{ row.Unique_Values|default_if_none:"N/A" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No dataset information available.</p>
+            {% endif %}
+        </section>
+
+
+
+
+        <!-- Dataset View Section -->
+        {% if dataset_view %}
+        <section class="dataset-view-section">
+            <h2>View Dataset</h2>
+            <table>
+                <thead>
+                    <tr>
+                        {% for column in dataset_view.columns %}
+                        <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dataset_view.rows %}
+                    <tr>
+                        {% for cell in row %}
+                        <td>{{ cell }}</td>
+                        {% endfor %}
+                    </tr>
                     {% endfor %}
-                {% endif %}
-            {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination Controls -->
+            <div class="pagination">
+                <form method="GET">
+                    {% if dataset_view.has_previous %}
+                    <button type="submit" name="page" value="{{ dataset_view.previous_page_number }}">Previous</button>
+                    {% else %}
+                    <button type="button" disabled>Previous</button>
+                    {% endif %}
+                    
+                    <span>Page {{ dataset_view.current_page }} of {{ dataset_view.num_pages }}</span>
+                    
+                    {% if dataset_view.has_next %}
+                    <button type="submit" name="page" value="{{ dataset_view.next_page_number }}">Next</button>
+                    {% else %}
+                    <button type="button" disabled>Next</button>
+                    {% endif %}
+                </form>
+            </div>
         </section>
         {% endif %}
-    </main>
-    <footer>
-        <p>&copy; 2024 Data Analysis App</p>
-    </footer>
+    </div>
+
 </body>
 </html>
