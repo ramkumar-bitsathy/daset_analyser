@@ -1,48 +1,89 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+/* Fix the width for the container and ensure it does not overflow */
+.container {
+    width: 80%;
+    margin: 0 auto;
+    max-width: 1200px; /* Max width for larger screens */
+    padding: 20px;
 }
-header, footer {
+
+/* Header styling */
+header {
     background-color: #007bff;
-    color: #fff;
-    padding: 10px;
+    color: white;
+    padding: 20px 0;
     text-align: center;
 }
-nav a {
-    margin: 0 10px;
-    color: #fff;
+
+header nav a {
+    color: white;
+    margin: 0 15px;
     text-decoration: none;
 }
-main {
-    padding: 20px;
-}
+
+/* Section styling */
 section {
-    margin: 20px auto;
+    margin: 20px 0;
     padding: 20px;
-    border: 1px solid #ddd;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    max-width: 800px;
     background-color: #f9f9f9;
 }
-button {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 10px 15px;
-    cursor: pointer;
-    border-radius: 5px;
+
+.upload-section {
+    background-color: #f1f1f1;
 }
+
+.view-info-section {
+    background-color: #fdfdfd;
+}
+
+.results-section {
+    background-color: #e9ecef;
+}
+
+/* Styling for forms and buttons */
+form {
+    margin: 0;
+}
+
+input[type="file"] {
+    margin-top: 10px;
+}
+
+select, button {
+    margin-top: 10px;
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
 button:hover {
     background-color: #0056b3;
 }
-select {
-    width: 100%;
-    padding: 5px;
+
+/* Styling for the results */
+.result-item {
+    margin-bottom: 15px;
 }
+
 pre {
-    background: #f4f4f4;
+    
+    background: #e9ecef;
     padding: 10px;
-    border: 1px solid #ddd;
     border-radius: 5px;
+    border: 1px solid #ccc;
+    max-width: 100%;
+    overflow-x: scroll; /* To allow scrolling if content is too wide */
+}
+
+/* Ensure everything stays within fixed width */
+.results-section {
+    max-width: 100%;
+    overflow-x: auto;
 }
