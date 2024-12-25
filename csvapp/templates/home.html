@@ -6,8 +6,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Analysis App</title>
     <link rel="stylesheet" href="{% static 'style.css' %}">
+    <style>
+        /* Fix the width for the container and ensure it does not overflow */
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            max-width: 1200px; /* Max width for larger screens */
+            padding: 20px;
+        }
+
+        /* Header styling */
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        header nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+        }
+
+        /* Section styling */
+        section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .upload-section {
+            max-width: 100%;
+            background-color: #f1f1f1;
+        }
+
+        .view-info-section {
+            max-width: 100%;
+            background-color: #fdfdfd;
+        }
+
+        .results-section {
+            background-color: #e9ecef;
+        }
+
+        /* Styling for forms and buttons */
+        form {
+            margin: 0;
+        }
+
+        input[type="file"] {
+            margin-top: 10px;
+        }
+
+        select, button {
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Styling for the results */
+        .result-item {
+            margin-bottom: 15px;
+        }
+
+        pre {
+            
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            max-width: 100%;
+            overflow-x: scroll; /* To allow scrolling if content is too wide */
+        }
+
+        /* Ensure everything stays within fixed width */
+        .results-section {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+    </style>
 </head>
 <body>
+
     <header>
         <h1>Data Analysis Application</h1>
         <nav>
@@ -15,15 +109,27 @@
             <a href="{% url 'visualization' %}">Visualization</a>
         </nav>
     </header>
-    <main>
+
+    <div class="container">
+        <!-- Upload Section -->
         <section class="upload-section">
             <h2>Upload Your Dataset</h2>
-            <form method="POST" enctype="multipart/form-data" action="{% url 'process_dataset' %}">
+            <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <!-- File upload -->
                 <label for="dataset">Upload Dataset (CSV/XLSX):</label>
-                <input type="file" id="dataset" name="dataset" accept=".csv" required><br><br>
+                <input type="file" id="dataset" name="dataset" accept=".csv, .xlsx" required><br><br>
+                
+                <!-- Submit button -->
+                <button type="submit">Upload Dataset</button>
+            </form>
+        </section>
 
+        <!-- View Info Section -->
+        <section class="view-info-section">
+            <h2>View Dataset Information</h2>
+            <form method="POST" action="{% url 'process_dataset' %}">
+                {% csrf_token %}
                 <!-- Select options -->
                 <label for="details">Select Details to Describe:</label>
                 <select id="details" name="details" multiple required>
@@ -31,29 +137,37 @@
                     <option value="data_types">Data Types</option>
                     <option value="statistical_info">Statistical Info</option>
                     <option value="unique_values">Unique Values</option>
-                    <option value="column_summary">Column Summary</option>
                 </select><br><br>
-
+        
                 <!-- Submit button -->
-                <button type="submit">Submit</button>
+                <button type="submit">View Info</button>
             </form>
         </section>
 
         {% if processed_data %}
+        <!-- Results Section -->
         <section class="results-section">
             <h2>Dataset Details</h2>
             <!-- Display results dynamically -->
             {% for detail, result in processed_data.items %}
-            <div class="result-item">
-                <h3>{{ detail }}</h3>
-                <pre>{{ result }}</pre>
-            </div>
+                {% if detail == "Statistical Info" or detail == "Column Summary" %}
+                <div class="result-item">
+                    <h3>{{ detail }}</h3>
+                    <pre>{{ result }}</pre>
+                </div>
+                {% endif %}
+                {% if detail != "Statistical Info" %}
+                    <h2>{{ detail }}</h2>
+                    {% for col, val in result.items %}
+                    <div class="result-item">
+                        <p>{{ col }}: {{ val }}</p>
+                    </div>
+                    {% endfor %}
+                {% endif %}
             {% endfor %}
         </section>
         {% endif %}
-    </main>
-    <footer>
-        <p>&copy; 2024 Data Analysis App</p>
-    </footer>
+    </div>
+
 </body>
 </html>
