@@ -150,36 +150,36 @@ def process_dataset(request):
         # Check if a file is uploaded
         if 'dataset' in request.FILES:
             uploaded_file = request.FILES['dataset']
-            
-            
-            # Load the dataset into a DataFrame
-            if uploaded_file.name.endswith('.csv'):
-                dataset = pd.read_csv(uploaded_file)
-            elif uploaded_file.name.endswith('.xlsx'):
-                dataset = pd.read_excel(uploaded_file)
-            else:
-                error_message = "Unsupported file format. Please upload a CSV or XLSX file."
-            
-            if dataset is not None:
-                # Store the dataset in the session
-                request.session['dataset'] = dataset.to_json()
-            
+            try:
+                # Load the dataset into a DataFrame
+                if uploaded_file.name.endswith('.csv'):
+                    dataset = pd.read_csv(uploaded_file)
+                elif uploaded_file.name.endswith('.xlsx'):
+                    dataset = pd.read_excel(uploaded_file)
+                else:
+                    error_message = "Unsupported file format. Please upload a CSV or XLSX file."
+                
+                if dataset is not None:
+                    # Store the dataset in the session
+                    request.session['dataset'] = dataset.to_json()
+            except Exception as e:
+                error_message = f"Failed to process the file: {str(e)}"
         else:
             error_message = "No dataset provided. Please upload a file."
 
     # Retrieve dataset from the session if available
     if 'dataset' in request.session:
         dataset_json = request.session['dataset']
-        dataset_view = pd.read_json(io.StringIO(dataset_json))
+        dataset = pd.read_json(io.StringIO(dataset_json))
 
     # Process the dataset if it exists
-    if dataset_view is not None:
+    if dataset is not None:
         # Pagination setup
         page_number = request.GET.get('page', 1)  # Get the current page number
-        paginator = Paginator(dataset_view.values.tolist(), 10)  # 10 rows per page
+        paginator = Paginator(dataset.values.tolist(), 10)  # 10 rows per page
         current_page = paginator.get_page(page_number)
         paginated_dataset = {
-            'columns': dataset_view.columns.tolist(),
+            'columns': dataset.columns.tolist(),
             'rows': current_page.object_list,
             'current_page': current_page.number,
             'num_pages': paginator.num_pages,
@@ -190,26 +190,26 @@ def process_dataset(request):
         }
 
         stats = []
-        for col in dataset_view.columns:
-            if pd.api.types.is_numeric_dtype(dataset_view[col]):
+        for col in dataset.columns:
+            if pd.api.types.is_numeric_dtype(dataset[col]):
                 column_stats = {
                     "Column": col,
-                    "Data_Type": str(dataset_view[col].dtype),
-                    "Null_Values": dataset_view[col].isnull().sum(),
-                    "Mean": dataset_view[col].mean(),
-                    "Median": dataset_view[col].median(),
-                    "Mode": dataset_view[col].mode()[0] if not dataset_view[col].mode().empty else "N/A",
-                    "percentile_25": dataset_view[col].quantile(0.25),
-                    "percentile_50": dataset_view[col].quantile(0.5),
-                    "percentile_75": dataset_view[col].quantile(0.75),
+                    "Data_Type": str(dataset[col].dtype),
+                    "Null_Values": dataset[col].isnull().sum(),
+                    "Mean": dataset[col].mean(),
+                    "Median": dataset[col].median(),
+                    "Mode": dataset[col].mode()[0] if not dataset[col].mode().empty else "N/A",
+                    "percentile_25": dataset[col].quantile(0.25),
+                    "percentile_50": dataset[col].quantile(0.5),
+                    "percentile_75": dataset[col].quantile(0.75),
                 }
             else:
                 column_stats = {
                     "Column": col,
-                    "Data_Type": str(dataset_view[col].dtype),
-                    "Null_Values": dataset_view[col].isnull().sum(),
-                    "Unique_Values": dataset_view[col].nunique(),
-                    "Mode": dataset_view[col].mode()[0] if not dataset_view[col].mode().empty else "N/A",
+                    "Data_Type": str(dataset[col].dtype),
+                    "Null_Values": dataset[col].isnull().sum(),
+                    "Unique_Values": dataset[col].nunique(),
+                    "Mode": dataset[col].mode()[0] if not dataset[col].mode().empty else "N/A",
                 }
             stats.append(column_stats)
 
