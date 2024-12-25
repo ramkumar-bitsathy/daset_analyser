@@ -185,21 +185,21 @@ def process_dataset(request):
             if pd.api.types.is_numeric_dtype(dataset[col]):
                 column_stats = {
                     "Column": col,
-                    "Data_Type": dataset[col].dtype,
-                    "Null_Values": dataset[col].isnull().sum(),
+                    "Data Type": dataset[col].dtype,
+                    "Null Values": dataset[col].isnull().sum(),
                     "Mean": dataset[col].mean(),
                     "Median": dataset[col].median(),
                     "Mode": dataset[col].mode()[0] if not dataset[col].mode().empty else "N/A",
-                    "percentile_25": dataset[col].quantile(0.25),
-                    "percentile_50": dataset[col].quantile(0.5),
-                    "percentile_75": dataset[col].quantile(0.75),
+                    "25%": dataset[col].quantile(0.25),
+                    "50%": dataset[col].quantile(0.5),
+                    "75%": dataset[col].quantile(0.75),
                 }
             else:
                 column_stats = {
                     "Column": col,
-                    "Data_Type": dataset[col].dtype,
-                    "Null_Values": dataset[col].isnull().sum(),
-                    "Unique_Values": dataset[col].nunique(),
+                    "Data Type": dataset[col].dtype,
+                    "Null Values": dataset[col].isnull().sum(),
+                    "Unique Values": dataset[col].nunique(),
                     "Mode": dataset[col].mode()[0] if not dataset[col].mode().empty else "N/A",
                 }
             stats.append(column_stats)
