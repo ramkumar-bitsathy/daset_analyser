@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from django.core.paginator import Paginator
+
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
@@ -143,11 +145,13 @@ def home(request):
 def process_dataset(request):
     processed_data = {}
     error_message = None
+    dataset = None  # Initialize dataset variable
 
     if request.method == 'POST':
         # Check if a file is uploaded
         if 'dataset' in request.FILES:
             uploaded_file = request.FILES['dataset']
+            # Load the dataset into a DataFrame
             dataset = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file)
             # Store the dataset in the session
             request.session['dataset'] = dataset.to_json()
@@ -159,19 +163,52 @@ def process_dataset(request):
         dataset_json = request.session['dataset']
         dataset = pd.read_json(StringIO(dataset_json))
 
-        # Process the dataset based on selected details
-        selected_details = request.POST.getlist('details', [])
-        if 'null_values' in selected_details:
-            processed_data['Null Values'] = dataset.isnull().sum().to_dict()
-        if 'data_types' in selected_details:
-            processed_data['Data Types'] = dataset.dtypes.astype(str).to_dict()
-        if 'statistical_info' in selected_details:
-            processed_data['Statistical Info'] = dataset.describe().to_string()
-        if 'unique_values' in selected_details:
-            processed_data['Unique Values'] = dataset.nunique().to_dict()
+    # Process the dataset if it exists
+    if dataset is not None:
+        # Pagination setup
+        page_number = request.GET.get('page', 1)  # Get the current page number
+        paginator = Paginator(dataset.values.tolist(), 10)  # 10 rows per page
+        current_page = paginator.get_page(page_number)
+        paginated_dataset = {
+            'columns': dataset.columns.tolist(),
+            'rows': current_page.object_list,
+            'current_page': current_page.number,
+            'num_pages': paginator.num_pages,
+            'has_previous': current_page.has_previous(),
+            'has_next': current_page.has_next(),
+            'previous_page_number': current_page.previous_page_number() if current_page.has_previous() else None,
+            'next_page_number': current_page.next_page_number() if current_page.has_next() else None,
+        }
 
-    # Render the template with context data
+        stats = []
+        for col in dataset.columns:
+            if pd.api.types.is_numeric_dtype(dataset[col]):
+                column_stats = {
+                    "Column": col,
+                    "Data_Type": dataset[col].dtype,
+                    "Null_Values": dataset[col].isnull().sum(),
+                    "Mean": dataset[col].mean(),
+                    "Median": dataset[col].median(),
+                    "Mode": dataset[col].mode()[0] if not dataset[col].mode().empty else "N/A",
+                    "percentile_25": dataset[col].quantile(0.25),
+                    "percentile_50": dataset[col].quantile(0.5),
+                    "percentile_75": dataset[col].quantile(0.75),
+                }
+            else:
+                column_stats = {
+                    "Column": col,
+                    "Data_Type": dataset[col].dtype,
+                    "Null_Values": dataset[col].isnull().sum(),
+                    "Unique_Values": dataset[col].nunique(),
+                    "Mode": dataset[col].mode()[0] if not dataset[col].mode().empty else "N/A",
+                }
+            stats.append(column_stats)
+
+        processed_data = stats
+
+    # Render the template with the context data
     return render(request, "home.html", {
         "processed_data": processed_data,
-        "error_message": error_message
+        "error_message": error_message,
+        "dataset_view": paginated_dataset if dataset is not None else None,
     })
