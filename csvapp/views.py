@@ -1,6 +1,4 @@
 from django.shortcuts import render
-from django.core.paginator import Paginator
-
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
@@ -143,13 +141,26 @@ def home(request):
 
 
 def process_dataset(request):
+    processed_data = {}
+    error_message = None
+
     if request.method == 'POST':
-        uploaded_file = request.FILES['dataset']
-        dataset = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file)
+        # Check if a file is uploaded
+        if 'dataset' in request.FILES:
+            uploaded_file = request.FILES['dataset']
+            dataset = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file)
+            # Store the dataset in the session
+            request.session['dataset'] = dataset.to_json()
+        elif 'dataset' not in request.session:
+            error_message = "No dataset provided. Please upload a file."
 
-        selected_details = request.POST.getlist('details')
-        processed_data = {}
+    # Retrieve dataset from the session if available
+    if 'dataset' in request.session:
+        dataset_json = request.session['dataset']
+        dataset = pd.read_json(StringIO(dataset_json))
 
+        # Process the dataset based on selected details
+        selected_details = request.POST.getlist('details', [])
         if 'null_values' in selected_details:
             processed_data['Null Values'] = dataset.isnull().sum().to_dict()
         if 'data_types' in selected_details:
@@ -158,11 +169,9 @@ def process_dataset(request):
             processed_data['Statistical Info'] = dataset.describe().to_string()
         if 'unique_values' in selected_details:
             processed_data['Unique Values'] = dataset.nunique().to_dict()
-        if 'column_summary' in selected_details:
-            processed_data['Column Summary'] = dataset.head().to_string()
 
-        request.session['dataset'] = dataset.to_json()
-
-        return render(request, 'home.html', {'processed_data': processed_data})
-
-    return render(request, 'home.html')
+    # Render the template with context data
+    return render(request, "home.html", {
+        "processed_data": processed_data,
+        "error_message": error_message
+    })
