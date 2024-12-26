@@ -9,6 +9,67 @@ import seaborn as sns
 from io import StringIO
 import io
 import base64
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+def manipulate_dataset(request):
+    error_message = None
+    success_message = None
+
+    # Check if dataset exists in the session
+    if 'dataset' not in request.session:
+        error_message = "No dataset available for manipulation. Please upload a dataset first."
+    else:
+        # Load the dataset from the session
+        dataset_json = request.session['dataset']
+        dataset = pd.read_json(StringIO(dataset_json))
+
+        if request.method == 'POST':
+            operation = request.POST.get('operation')
+            
+            try:
+                if operation == 'remove_nulls':
+                    dataset = dataset.dropna()
+                    success_message = "Null values removed successfully."
+
+                elif operation == 'fill_nulls':
+                    fill_value = request.POST.get('fill_value')
+                    dataset = dataset.fillna(fill_value)
+                    success_message = f"Null values filled with '{fill_value}' successfully."
+
+                elif operation == 'convert_categorical':
+                    column_name = request.POST.get('column_name')
+                    if column_name in dataset.columns:
+                        dataset[column_name] = dataset[column_name].astype('category').cat.codes
+                        success_message = f"Column '{column_name}' converted to numerical successfully."
+                    else:
+                        error_message = f"Column '{column_name}' does not exist."
+
+                elif operation == 'scaling':
+                    scaling_method = request.POST.get('scaling_method')
+                    scaler = StandardScaler() if scaling_method == 'standard' else MinMaxScaler()
+                    numerical_cols = dataset.select_dtypes(include=['number']).columns
+                    dataset[numerical_cols] = scaler.fit_transform(dataset[numerical_cols])
+                    success_message = f"Dataset scaled using {scaling_method} scaling successfully."
+
+                else:
+                    error_message = "Invalid operation selected."
+
+                # Update the dataset in the session
+                request.session['dataset'] = dataset.to_json()
+
+            except Exception as e:
+                error_message = str(e)
+
+    paginated_dataset,processed_data =  prepare_dataset(request)
+    
+    # Render the home page with appropriate messages
+    return render(request, "home.html", {
+        "manipulation_error_message": error_message,
+        "manipulation_success_message": success_message,
+        "processed_data": processed_data,
+        "dataset_view": paginated_dataset if dataset is not None else None,
+    })
+
 
 def generate_visualization(request):
     if 'dataset' not in request.session:
@@ -141,33 +202,9 @@ def generate_visualization(request):
 def home(request):
     return render(request, 'home.html')
 
-def process_dataset(request):
+def prepare_dataset(request):
     processed_data = {}
-    error_message = None
-      # Initialize dataset variable
-
-    if request.method == 'POST':
-        # Check if a file is uploaded
-        if 'dataset' in request.FILES:
-            uploaded_file = request.FILES['dataset']
-            try:
-                # Load the dataset into a DataFrame
-                if uploaded_file.name.endswith('.csv'):
-                    dataset = pd.read_csv(uploaded_file)
-                elif uploaded_file.name.endswith('.xlsx'):
-                    dataset = pd.read_excel(uploaded_file)
-                else:
-                    error_message = "Unsupported file format. Please upload a CSV or XLSX file."
-                
-                if dataset is not None:
-                    # Store the dataset in the session
-                    request.session['dataset'] = dataset.to_json()
-            except Exception as e:
-                error_message = f"Failed to process the file: {str(e)}"
-        else:
-            error_message = "No dataset provided. Please upload a file."
-
-    # Retrieve dataset from the session if available
+# Retrieve dataset from the session if available
     if 'dataset' in request.session:
         dataset_json = request.session['dataset']
         dataset = pd.read_json(io.StringIO(dataset_json))
@@ -214,6 +251,36 @@ def process_dataset(request):
             stats.append(column_stats)
 
         processed_data = stats
+
+        return paginated_dataset,processed_data
+
+def process_dataset(request):
+    processed_data = {}
+    error_message = None
+      # Initialize dataset variable
+
+    if request.method == 'POST':
+        # Check if a file is uploaded
+        if 'dataset' in request.FILES:
+            uploaded_file = request.FILES['dataset']
+            try:
+                # Load the dataset into a DataFrame
+                if uploaded_file.name.endswith('.csv'):
+                    dataset = pd.read_csv(uploaded_file)
+                elif uploaded_file.name.endswith('.xlsx'):
+                    dataset = pd.read_excel(uploaded_file)
+                else:
+                    error_message = "Unsupported file format. Please upload a CSV or XLSX file."
+                
+                if dataset is not None:
+                    # Store the dataset in the session
+                    request.session['dataset'] = dataset.to_json()
+            except Exception as e:
+                error_message = f"Failed to process the file: {str(e)}"
+        else:
+            error_message = "No dataset provided. Please upload a file."
+    paginated_dataset,processed_data =  prepare_dataset(request)
+    
 
     # Render the template with the context data
     return render(request, "home.html", {

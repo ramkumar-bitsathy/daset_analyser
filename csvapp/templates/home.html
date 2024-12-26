@@ -141,6 +141,62 @@
             </form>
         </section>
 
+        <section class="manipulate-section">
+            <h2>Manipulate Dataset</h2>
+            <form method="POST" action="{% url 'manipulate_dataset' %}">
+                {% csrf_token %}
+                
+                <div class="manipulation-option">
+                    <label for="operation">Select Operation:</label>
+                    <select id="operation" name="operation" required>
+                        <option value="">--Choose an operation--</option>
+                        <option value="remove_nulls">Remove Null Values</option>
+                        <option value="fill_nulls">Fill Null Values</option>
+                        <option value="convert_categorical">Convert Categorical to Numerical</option>
+                        <option value="scaling">Scale Numerical Data</option>
+                    </select>
+                </div>
+        
+                <!-- Input for additional parameters -->
+                <div class="manipulation-params" id="manipulation-params">
+                    <!-- These fields will be dynamically shown based on operation -->
+                </div>
+        
+                <!-- Submit button -->
+                <button type="submit">Apply Manipulation</button>
+            </form>
+        </section>
+        
+        <script>
+            // Dynamically show/hide fields based on selected operation
+            document.getElementById('operation').addEventListener('change', function () {
+                const paramsDiv = document.getElementById('manipulation-params');
+                paramsDiv.innerHTML = ''; // Clear existing fields
+                const operation = this.value;
+        
+                if (operation === 'fill_nulls') {
+                    paramsDiv.innerHTML = `
+                        <label for="fill_value">Fill Value:</label>
+                        <input type="text" id="fill_value" name="fill_value" required>
+                    `;
+                } else if (operation === 'convert_categorical') {
+                    paramsDiv.innerHTML = `
+                        <label for="column_name">Column to Convert:</label>
+                        <input type="text" id="column_name" name="column_name" required>
+                    `;
+                } else if (operation === 'scaling') {
+                    paramsDiv.innerHTML = `
+                        <label for="scaling_method">Scaling Method:</label>
+                        <select id="scaling_method" name="scaling_method" required>
+                            <option value="standard">Standard Scaling</option>
+                            <option value="minmax">Min-Max Scaling</option>
+                        </select>
+                    `;
+                }
+            });
+        </script>
+        
+
         <section class="dataset-info">
             <h2>Dataset Details</h2>
             {% if processed_data %}
